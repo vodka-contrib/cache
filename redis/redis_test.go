@@ -1,7 +1,7 @@
 package redis
 
 import (
-	"github.com/weisd/cache"
+	"github.com/vodka-contrib/cache"
 	"testing"
 )
 
