@@ -3,8 +3,8 @@
 
 ## import
 ```
-	"github.com/weisd/cache"
-	_ "github.com/weisd/cache/redis"
+	"github.com/vodka-contrib/cache"
+	_ "github.com/vodka-contrib/cache/redis"
 
 ```
 
