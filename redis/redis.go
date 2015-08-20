@@ -6,7 +6,7 @@ import (
 	"time"
 
 	redigo "github.com/garyburd/redigo/redis"
-	"github.com/weisd/cache"
+	"github.com/vodka-contrib/cache"
 )
 
 const GC_HASH_KEY = "TagCache:CacheGCKeys"
