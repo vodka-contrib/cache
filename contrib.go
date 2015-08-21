@@ -4,15 +4,15 @@ import (
 	"github.com/insionng/vodka"
 )
 
-const EchoCacheStoreKey = "EchoCacheStore"
+const VodkaCacheStoreKey = "VodkaCacheStore"
 
 func Store(value interface{}) Cache {
 	var cacher Cache
 	switch v := value.(type) {
 	case *vodka.Context:
-		cacher = v.Get(EchoCacheStoreKey).(Cache)
+		cacher = v.Get(VodkaCacheStoreKey).(Cache)
 		if cacher == nil {
-			panic("EchoStore not found, forget to Use Middleware ?")
+			panic("VodkaStore not found, forget to Use Middleware ?")
 		}
 	default:
 
@@ -26,7 +26,7 @@ func Store(value interface{}) Cache {
 	return cacher
 }
 
-func EchoCacher(opt Options) vodka.MiddlewareFunc {
+func VodkaCacher(opt Options) vodka.MiddlewareFunc {
 	return func(h vodka.HandlerFunc) vodka.HandlerFunc {
 		return func(c *vodka.Context) error {
 			tagcache, err := New(opt)
@@ -34,7 +34,7 @@ func EchoCacher(opt Options) vodka.MiddlewareFunc {
 				return err
 			}
 
-			c.Set(EchoCacheStoreKey, tagcache)
+			c.Set(VodkaCacheStoreKey, tagcache)
 
 			if err = h(c); err != nil {
 				return err
