@@ -1,11 +1,12 @@
 # cache
 
+    Middleware cache provides cache management for Vodka v2+. It can use many cache adapters, including memory, file, Redis.
+
 
 ## import
-```
-	"github.com/vodka-contrib/cache"
+```go
+    "github.com/vodka-contrib/cache"
 	_ "github.com/vodka-contrib/cache/redis"
-
 ```
 
 ## Documentation
@@ -24,27 +25,27 @@ func Test_TagCache(t *testing.T) {
 	}
 
 	// base use
-	err = c.Put("da", "weisd", 300)
+	err = c.Put("da", "vodka", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	res := c.Get("da")
 
-	if res != "weisd" {
+	if res != "vodka" {
 		t.Fatal("base put faield")
 	}
 
 	t.Log("ok")
 
 	// use tags/namespace
-	err = c.Tags([]string{"dd"}).Put("da", "weisd", 300)
+	err = c.Tags([]string{"dd"}).Put("da", "vodka", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
 	res = c.Tags([]string{"dd"}).Get("da")
 
-	if res != "weisd" {
+	if res != "vodka" {
 		t.Fatal("tags put faield")
 	}
 
@@ -81,7 +82,7 @@ func Test_TagCache(t *testing.T) {
 
 	// still store in
 	res = c.Tags([]string{"dd"}).Get("da")
-	if res != "weisd" {
+	if res != "vodka" {
 		t.Fatal("where ")
 	}
 
@@ -91,28 +92,41 @@ func Test_TagCache(t *testing.T) {
 ```
 
 
-## echo Middleware
+## vodka Middleware
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/insionng/vodka"
+	"github.com/insionng/vodka/engine/fasthttp"
+	"github.com/vodka-contrib/cache"
+	_ "github.com/vodka-contrib/cache/redis"
+)
+
+func main() {
+
+	v := vodka.New()
+	v.Use(cache.VodkaCacher(cache.Options{Adapter: "redis", AdapterConfig: `{"Addr":":6379"}`, Section: "test", Interval: 5}))
+
+	v.GET("/cache/put/", func(self vodka.Context) error {
+		err := cache.Store(self).Put("name", "vodka", 60)
+		if err != nil {
+			return err
+		}
+
+		return self.String(http.StatusOK, "store okay")
+	})
+
+	v.GET("/cache/get/", func(self vodka.Context) error {
+		name := cache.Store(self).Get("name")
+
+		return self.String(http.StatusOK, fmt.Sprintf("get name %s", name))
+	})
+
+	v.Run(fasthttp.New(":7891"))
+}
+
 ```
-e := echo.New()
-e.Use(cache.EchoCacher(cache.Options{Adapter: "redis", AdapterConfig: `{"Addr":":6379"}`, Section: "test", Interval: 5}))
-
-e.Get("/test/cache/put", func(c *echo.Context) error {
-	err := cache.Store(c).Put("name", "weisd", 10)
-	if err != nil {
-		return err
-	}
-
-	return c.String(200, "store ok")
-})
-
-e.Get("/test/cache/get", func(c *echo.Context) error {
-	name := cache.Store(c).Get("name")
-
-	return c.String(200, "get name %s", name)
-})
-
-e.Run(":1323")
-
-```
-
-##

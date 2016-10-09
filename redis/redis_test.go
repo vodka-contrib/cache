@@ -1,8 +1,9 @@
 package redis
 
 import (
-	"github.com/vodka-contrib/cache"
 	"testing"
+
+	"github.com/vodka-contrib/cache"
 )
 
 func TestRedisCache(t *testing.T) {
