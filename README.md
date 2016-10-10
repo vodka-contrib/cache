@@ -109,7 +109,7 @@ import (
 func main() {
 
 	v := vodka.New()
-	v.Use(cache.VodkaCacher(cache.Options{Adapter: "redis", AdapterConfig: `{"Addr":":6379"}`, Section: "test", Interval: 5}))
+	v.Use(cache.Cacher(cache.Options{Adapter: "redis", AdapterConfig: `{"Addr":":6379"}`, Section: "test", Interval: 5}))
 
 	v.GET("/cache/put/", func(self vodka.Context) error {
 		err := cache.Store(self).Put("name", "vodka", 60)
