@@ -26,7 +26,7 @@ func Store(value interface{}) Cache {
 	return cacher
 }
 
-func VodkaCacher(opt Options) vodka.MiddlewareFunc {
+func Cacher(opt Options) vodka.MiddlewareFunc {
 	return func(next vodka.HandlerFunc) vodka.HandlerFunc {
 		return func(self vodka.Context) error {
 			tagcache, err := New(opt)
