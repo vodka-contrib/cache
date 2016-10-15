@@ -1,6 +1,6 @@
 # cache
 
-    Middleware cache provides cache management for Vodka v2+. It can use many cache adapters, including memory, file, Redis.
+Middleware cache provides cache management for Vodka v2+. It can use many cache adapters, including memory, file, Redis.
 
 
 ## import
