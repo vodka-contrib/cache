@@ -25,41 +25,38 @@ func Test_TagCache(t *testing.T) {
 	}
 
 	// base use
-	err = c.Set("da", "weisd", 300)
+	err = c.Put("da", "vodka", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	res := ""
-	c.Get("da", &res)
+	res := c.Get("da")
 
-	if res != "weisd" {
+	if res != "vodka" {
 		t.Fatal("base put faield")
 	}
 
 	t.Log("ok")
 
 	// use tags/namespace
-	err = c.Tags([]string{"dd"}).Set("da", "weisd", 300)
+	err = c.Tags([]string{"dd"}).Put("da", "vodka", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
-	res = ""
-	c.Tags([]string{"dd"}).Get("da", &res)
+	res = c.Tags([]string{"dd"}).Get("da")
 
-	if res != "weisd" {
+	if res != "vodka" {
 		t.Fatal("tags put faield")
 	}
 
 	t.Log("ok")
 
-	err = c.Tags([]string{"aa"}).Set("aa", "aaa", 300)
+	err = c.Tags([]string{"aa"}).Put("aa", "aaa", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	res = ""
-	c.Tags([]string{"aa"}).Get("aa", &res)
+	res = c.Tags([]string{"aa"}).Get("aa")
 
 	if res != "aaa" {
 		t.Fatal("not aaa")
@@ -73,23 +70,20 @@ func Test_TagCache(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res = ""
-	c.Tags([]string{"aa"}).Get("aa", &res)
+	res = c.Tags([]string{"aa"}).Get("aa")
 	if res != "" {
 		t.Fatal("flush faield")
 	}
 
-	res = ""
-	c.Tags([]string{"aa"}).Get("bb", &res)
+	res = c.Tags([]string{"aa"}).Get("bb")
 	if res != "" {
 		t.Fatal("flush faield")
 	}
 
 	// still store in
-	res = ""
-	c.Tags([]string{"dd"}).Get("da", &res)
-	if res != "weisd" {
-		t.Fatal("where")
+	res = c.Tags([]string{"dd"}).Get("da")
+	if res != "vodka" {
+		t.Fatal("where ")
 	}
 
 	t.Log("ok")
@@ -118,7 +112,7 @@ func main() {
 	v.Use(cache.Cacher(cache.Options{Adapter: "redis", AdapterConfig: `{"Addr":":6379"}`, Section: "test", Interval: 5}))
 
 	v.GET("/cache/put/", func(self vodka.Context) error {
-		err := cache.Store(self).Set("name", "vodka", 60)
+		err := cache.Store(self).Put("name", "vodka", 60)
 		if err != nil {
 			return err
 		}
@@ -127,8 +121,7 @@ func main() {
 	})
 
 	v.GET("/cache/get/", func(self vodka.Context) error {
-		var name string
-		cache.Store(self).Get("name", &name)
+		name := cache.Store(self).Get("name")
 
 		return self.String(http.StatusOK, fmt.Sprintf("get name %s", name))
 	})
