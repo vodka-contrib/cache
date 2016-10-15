@@ -7,6 +7,7 @@ import (
 
 	redigo "github.com/garyburd/redigo/redis"
 	"github.com/vodka-contrib/cache"
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 const GC_HASH_KEY = "TagCache:CacheGCKeys"
@@ -65,12 +66,20 @@ func (r *RedisCache) do(commandName string, args ...interface{}) (reply interfac
 	return c.Do(commandName, args...)
 }
 
-func (r *RedisCache) Put(key, val string, timeout int64) (err error) {
-	var timeoutUnix int64 = 0
+func (r *RedisCache) Set(key string, val interface{}, timeout int64) (err error) {
+
+	var timeoutUnix int64
+	var value []byte
+
+	value, err = msgpack.Marshal(val)
+	if err != nil {
+		return
+	}
+
 	if timeout == 0 {
-		_, err = r.do("SET", r.key(key), val)
+		_, err = r.do("SET", r.key(key), value)
 	} else {
-		_, err = r.do("SETEX", r.key(key), timeout, val)
+		_, err = r.do("SETEX", r.key(key), timeout, value)
 		timeoutUnix = time.Now().Unix() + timeout
 	}
 	if err != nil {
@@ -83,11 +92,16 @@ func (r *RedisCache) Put(key, val string, timeout int64) (err error) {
 
 	_, err = r.do("HSET", r.key(GC_HASH_KEY), r.key(key), timeoutUnix)
 	return
+
 }
 
-func (r *RedisCache) Get(key string) string {
-	v, _ := redigo.String(r.do("GET", r.key(key)))
-	return v
+func (r *RedisCache) Get(key string, _val interface{}) error {
+	b, e := redigo.Bytes(r.do("GET", r.key(key)))
+	if e != nil {
+		return e
+	}
+
+	return msgpack.Unmarshal(b, _val)
 }
 
 // Delete deletes cached value by given key.
@@ -134,7 +148,7 @@ func (r *RedisCache) Flush() (err error) {
 		return
 	}
 
-	fmt.Println(keys)
+	//fmt.Println(keys)
 
 	conn := r.pool.Get()
 	defer conn.Close()
@@ -156,7 +170,7 @@ func (r *RedisCache) startGC() {
 
 	nowUnix := time.Now().Unix()
 
-	outKeys := make([]interface{}, 0)
+	var outKeys []interface{}
 
 	for k, v := range kvs {
 		if v == 0 {

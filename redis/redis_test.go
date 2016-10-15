@@ -13,25 +13,33 @@ func TestRedisCache(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Put("da", "weisd", 300)
+	err = c.Set("da", "weisd", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	res := c.Get("da")
+	res := ""
+	err = c.Get("da", &res)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if res != "weisd" {
-		t.Fatal("sdf")
+		t.Fatal(res)
 	}
 
 	t.Log("ok")
 	t.Log("test", res)
 
-	err = c.Tags([]string{"dd"}).Put("da", "weisd", 300)
+	err = c.Tags([]string{"dd"}).Set("da", "weisd", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
-	res = c.Tags([]string{"dd"}).Get("da")
+	res = ""
+	err = c.Tags([]string{"dd"}).Get("da", &res)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if res != "weisd" {
 		t.Fatal("not weisd")
@@ -40,17 +48,21 @@ func TestRedisCache(t *testing.T) {
 	t.Log("ok")
 	t.Log("dd", res)
 
-	err = c.Tags([]string{"aa"}).Put("aa", "aaa", 300)
+	err = c.Tags([]string{"aa"}).Set("aa", "aaa", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.Tags([]string{"aa"}).Put("bb", "bbb", 300)
+	err = c.Tags([]string{"aa"}).Set("bb", "bbb", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	res = c.Tags([]string{"aa"}).Get("aa")
+	res = ""
+	err = c.Tags([]string{"aa"}).Get("aa", &res)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if res != "aaa" {
 		t.Fatal("not aaa")
@@ -64,26 +76,37 @@ func TestRedisCache(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res = c.Tags([]string{"aa"}).Get("aa")
+	res = ""
+	c.Tags([]string{"aa"}).Get("aa", &res)
 	if res != "" {
 		t.Fatal("flush faield")
 	}
 
-	res = c.Tags([]string{"aa"}).Get("bb")
+	res = ""
+	c.Tags([]string{"aa"}).Get("bb", &res)
 	if res != "" {
 		t.Fatal("flush faield")
 	}
 
-	res = c.Tags([]string{"dd"}).Get("da")
+	res = ""
+	err = c.Tags([]string{"dd"}).Get("da", &res)
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	if res != "weisd" {
 		t.Fatal("not weisd")
 	}
 
 	t.Log("ok")
 
-	c.Flush()
+	err = c.Flush()
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	res = c.Get("da")
+	res = ""
+	c.Get("da", &res)
 	if res != "" {
 		t.Fatal("flush failed")
 	}

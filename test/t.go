@@ -16,7 +16,7 @@ func main() {
 	v.Use(cache.Cacher(cache.Options{Adapter: "redis", AdapterConfig: `{"Addr":":6379"}`, Section: "test", Interval: 5}))
 
 	v.GET("/cache/put/", func(self vodka.Context) error {
-		err := cache.Store(self).Put("name", "vodka", 60)
+		err := cache.Store(self).Set("name", "vodka", 60)
 		if err != nil {
 			return err
 		}
@@ -25,7 +25,8 @@ func main() {
 	})
 
 	v.GET("/cache/get/", func(self vodka.Context) error {
-		name := cache.Store(self).Get("name")
+		var name string
+		cache.Store(self).Get("name", &name)
 
 		return self.String(http.StatusOK, fmt.Sprintf("get name %s", name))
 	})

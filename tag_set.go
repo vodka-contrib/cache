@@ -65,13 +65,14 @@ func (this *TagSet) Reset() error {
 
 // 取tag id
 func (this *TagSet) TagId(name string) string {
-	id := this.store.Get(this.TagKey(name))
-	// idstr, ok := id.(string)
-	if len(id) == 0 {
+	var idstr string
+	this.store.Get(this.TagKey(name), &idstr)
+
+	if len(idstr) == 0 {
 		return this.ResetTag(name)
 	}
 
-	return id
+	return idstr
 }
 
 // 取所有的tagid
@@ -102,7 +103,7 @@ func (this *TagSet) GetNamespace() string {
 // 重置key
 func (this *TagSet) ResetTag(name string) string {
 	id := this.generateId()
-	err := this.store.Put(this.TagKey(name), id, 3600)
+	err := this.store.Set(this.TagKey(name), id, 3600)
 	if err != nil {
 		panic(fmt.Errorf("ResetTag store Forever err : %v", err))
 	}

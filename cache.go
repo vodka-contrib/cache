@@ -27,10 +27,10 @@ var _ Cache = new(Engine)
 
 // Cache is the interface that operates the cache data.
 type CacheStore interface {
-	// Put puts value into cache with key and expire time.
-	Put(key, val string, timeout int64) error
+	// Set puts value into cache with key and expire time.
+	Set(key string, val interface{}, timeout int64) error
 	// Get gets cached value by given key.
-	Get(key string) string
+	Get(key string, _val interface{}) error
 	// Delete deletes cached value by given key.
 	Delete(key string) error
 	// Incr increases cached int-type value by given key as a counter.
@@ -69,10 +69,6 @@ func prepareOptions(options []Options) Options {
 		opt = options[0]
 	}
 
-	// if len(opt.Section) == 0 {
-	// 	opt.Section = ""
-	// }
-
 	if len(opt.Adapter) == 0 {
 		opt.Adapter = "memory"
 	}
@@ -103,12 +99,12 @@ type Engine struct {
 	store CacheStore
 }
 
-func (this *Engine) Put(key, val string, timeout int64) error {
-	return this.store.Put(key, val, timeout)
+func (this *Engine) Set(key string, val interface{}, timeout int64) error {
+	return this.store.Set(key, val, timeout)
 }
 
-func (this *Engine) Get(key string) string {
-	return this.store.Get(key)
+func (this *Engine) Get(key string, _val interface{}) error {
+	return this.store.Get(key, _val)
 }
 
 func (this *Engine) Delete(key string) error {

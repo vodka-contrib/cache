@@ -20,68 +20,16 @@ import (
 	"os"
 )
 
-func EncodeGob(item *Item) ([]byte, error) {
+func EncodeGob(i *Item) ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
-	err := gob.NewEncoder(buf).Encode(item)
+	err := gob.NewEncoder(buf).Encode(i)
 	return buf.Bytes(), err
 }
 
-func DecodeGob(data []byte, out *Item) error {
+func DecodeGob(data []byte, o *Item) error {
 	buf := bytes.NewBuffer(data)
-	return gob.NewDecoder(buf).Decode(&out)
+	return gob.NewDecoder(buf).Decode(&o)
 }
-
-// func Incr(val interface{}) (interface{}, error) {
-// 	switch val.(type) {
-// 	case int:
-// 		val = val.(int) + 1
-// 	case int32:
-// 		val = val.(int32) + 1
-// 	case int64:
-// 		val = val.(int64) + 1
-// 	case uint:
-// 		val = val.(uint) + 1
-// 	case uint32:
-// 		val = val.(uint32) + 1
-// 	case uint64:
-// 		val = val.(uint64) + 1
-// 	default:
-// 		return val, errors.New("item value is not int-type")
-// 	}
-// 	return val, nil
-// }
-//
-// func Decr(val interface{}) (interface{}, error) {
-// 	switch val.(type) {
-// 	case int:
-// 		val = val.(int) - 1
-// 	case int32:
-// 		val = val.(int32) - 1
-// 	case int64:
-// 		val = val.(int64) - 1
-// 	case uint:
-// 		if val.(uint) > 0 {
-// 			val = val.(uint) - 1
-// 		} else {
-// 			return val, errors.New("item value is less than 0")
-// 		}
-// 	case uint32:
-// 		if val.(uint32) > 0 {
-// 			val = val.(uint32) - 1
-// 		} else {
-// 			return val, errors.New("item value is less than 0")
-// 		}
-// 	case uint64:
-// 		if val.(uint64) > 0 {
-// 			val = val.(uint64) - 1
-// 		} else {
-// 			return val, errors.New("item value is less than 0")
-// 		}
-// 	default:
-// 		return val, errors.New("item value is not int-type")
-// 	}
-// 	return val, nil
-// }
 
 // IsExist checks whether a file or directory exists.
 // It returns false when the file or directory does not exist.

@@ -19,6 +19,7 @@ package cache
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -26,11 +27,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 // Item represents a cache item.
 type Item struct {
-	Val     string
+	Val     interface{}
 	Created int64
 	Expire  int64
 }
@@ -57,9 +60,9 @@ func (c *FileCacher) filepath(key string) string {
 	return filepath.Join(c.rootPath, string(hash[0]), string(hash[1]), hash)
 }
 
-// Put puts value into cache with key and expire time.
+// Set puts value into cache with key and expire time.
 // If expired is 0, it will be deleted by next GC operation.
-func (c *FileCacher) Put(key string, val string, expire int64) error {
+func (c *FileCacher) Set(key string, val interface{}, expire int64) error {
 	filename := c.filepath(key)
 	item := &Item{val, time.Now().Unix(), expire}
 	data, err := EncodeGob(item)
@@ -84,17 +87,18 @@ func (c *FileCacher) read(key string) (*Item, error) {
 }
 
 // Get gets cached value by given key.
-func (c *FileCacher) Get(key string) string {
+func (c *FileCacher) Get(key string, _val interface{}) error {
 	item, err := c.read(key)
 	if err != nil {
-		return ""
+		return err
 	}
 
 	if item.hasExpired() {
-		os.Remove(c.filepath(key))
-		return ""
+		return os.Remove(c.filepath(key))
 	}
-	return item.Val
+	b, _ := item.Val.([]byte)
+	return msgpack.Unmarshal(b, _val)
+
 }
 
 // Delete deletes cached value by given key.
@@ -158,7 +162,7 @@ func (c *FileCacher) startGC() {
 
 		data, err := ioutil.ReadFile(path)
 		if err != nil && !os.IsNotExist(err) {
-			fmt.Errorf("ReadFile: %v", err)
+			return fmt.Errorf("ReadFile: %v", err)
 		}
 
 		item := new(Item)
@@ -199,12 +203,13 @@ func (c *FileCacher) Incr(key string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	i, errParse := strconv.ParseInt(item.Val, 10, 32)
-	if errParse != nil {
-		return 0, errParse
+	i, okay := item.Val.(int64)
+	//i, errParse := strconv.ParseInt(item.Val, 10, 32)
+	if !okay {
+		return 0, errors.New("item value is not int64 type")
 	}
 	item.Val = strconv.FormatInt(i+1, 10)
-	c.Put(key, item.Val, item.Expire)
+	c.Set(key, item.Val, item.Expire)
 	return i + 1, nil
 }
 
@@ -215,12 +220,13 @@ func (c *FileCacher) Decr(key string) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	i, errParse := strconv.ParseInt(item.Val, 10, 32)
-	if errParse != nil {
-		return 0, errParse
+	i, okay := item.Val.(int64)
+	//i, errParse := strconv.ParseInt(item.Val, 10, 32)
+	if !okay {
+		return 0, errors.New("item value is not int64 type")
 	}
 	item.Val = strconv.FormatInt(i-1, 10)
-	c.Put(key, item.Val, item.Expire)
+	c.Set(key, item.Val, item.Expire)
 	return i - 1, nil
 }
 
@@ -232,7 +238,7 @@ func (c *FileCacher) Touch(key string, expire int64) error {
 		return err
 	}
 
-	c.Put(key, item.Val, item.Expire)
+	c.Set(key, item.Val, item.Expire)
 
 	return nil
 

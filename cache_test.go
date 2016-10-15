@@ -12,12 +12,13 @@ func Test_TagCache(t *testing.T) {
 	}
 
 	// base use
-	err = c.Put("da", "weisd", 300)
+	err = c.Set("da", "weisd", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	res := c.Get("da")
+	res := ""
+	c.Get("da", &res)
 
 	if res != "weisd" {
 		t.Fatal("base put faield")
@@ -26,11 +27,12 @@ func Test_TagCache(t *testing.T) {
 	t.Log("ok")
 
 	// use tags/namespace
-	err = c.Tags([]string{"dd"}).Put("da", "weisd", 300)
+	err = c.Tags([]string{"dd"}).Set("da", "weisd", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
-	res = c.Tags([]string{"dd"}).Get("da")
+	res = ""
+	c.Tags([]string{"dd"}).Get("da", &res)
 
 	if res != "weisd" {
 		t.Fatal("tags put faield")
@@ -38,12 +40,13 @@ func Test_TagCache(t *testing.T) {
 
 	t.Log("ok")
 
-	err = c.Tags([]string{"aa"}).Put("aa", "aaa", 300)
+	err = c.Tags([]string{"aa"}).Set("aa", "aaa", 300)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	res = c.Tags([]string{"aa"}).Get("aa")
+	res = ""
+	c.Tags([]string{"aa"}).Get("aa", &res)
 
 	if res != "aaa" {
 		t.Fatal("not aaa")
@@ -57,20 +60,23 @@ func Test_TagCache(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res = c.Tags([]string{"aa"}).Get("aa")
+	res = ""
+	c.Tags([]string{"aa"}).Get("aa", &res)
 	if res != "" {
 		t.Fatal("flush faield")
 	}
 
-	res = c.Tags([]string{"aa"}).Get("bb")
+	res = ""
+	c.Tags([]string{"aa"}).Get("bb", &res)
 	if res != "" {
 		t.Fatal("flush faield")
 	}
 
 	// still store in
-	res = c.Tags([]string{"dd"}).Get("da")
+	res = ""
+	c.Tags([]string{"dd"}).Get("da", &res)
 	if res != "weisd" {
-		t.Fatal("where ")
+		t.Fatal("where")
 	}
 
 	t.Log("ok")

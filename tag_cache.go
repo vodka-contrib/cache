@@ -15,8 +15,8 @@ func (this *TagCache) TaggedItemKey(key string) string {
 	return EncodeSha1(this.tagSet.GetNamespace()) + ":" + key
 }
 
-func (this *TagCache) Get(key string) string {
-	return this.store.Get(this.TaggedItemKey(key))
+func (this *TagCache) Get(key string, _val interface{}) error {
+	return this.store.Get(this.TaggedItemKey(key), _val)
 }
 
 func (this *TagCache) IsExist(key string) bool {
@@ -28,8 +28,8 @@ func (this *TagCache) Touch(key string, expire int64) error {
 	return this.store.Touch(this.TaggedItemKey(key), expire)
 }
 
-func (this *TagCache) Put(key, value string, expire int64) error {
-	return this.store.Put(this.TaggedItemKey(key), value, expire)
+func (this *TagCache) Set(key string, value interface{}, expire int64) error {
+	return this.store.Set(this.TaggedItemKey(key), value, expire)
 }
 
 func (this *TagCache) Incr(key string) (int64, error) {

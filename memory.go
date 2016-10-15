@@ -5,13 +5,15 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"gopkg.in/vmihailenco/msgpack.v2"
 )
 
 var _ CacheStore = NewMemoryCacher()
 
 // MemoryItem represents a memory cache item.
 type MemoryItem struct {
-	val     string
+	val     interface{}
 	created int64
 	expire  int64
 }
@@ -28,13 +30,18 @@ func NewMemoryCacher() *MemoryCacher {
 	return &MemoryCacher{items: make(map[string]*MemoryItem)}
 }
 
-// Put puts value into cache with key and expire time.
-func (c *MemoryCacher) Put(key, val string, expire int64) error {
+// Set puts value into cache with key and expire time.
+func (c *MemoryCacher) Set(key string, val interface{}, expire int64) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
+	b, e := msgpack.Marshal(val)
+	if e != nil {
+		return e
+	}
+
 	c.items[key] = &MemoryItem{
-		val:     val,
+		val:     b,
 		created: time.Now().Unix(),
 		expire:  expire,
 	}
@@ -42,12 +49,17 @@ func (c *MemoryCacher) Put(key, val string, expire int64) error {
 }
 
 // put value into cache with key forever save
-func (c *MemoryCacher) Forever(key, val string) error {
+func (c *MemoryCacher) Forever(key string, val interface{}) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 
+	b, e := msgpack.Marshal(val)
+	if e != nil {
+		return e
+	}
+
 	c.items[key] = &MemoryItem{
-		val:     val,
+		val:     b,
 		created: time.Now().Unix(),
 		expire:  0,
 	}
@@ -76,20 +88,22 @@ func (c *MemoryCacher) Touch(key string, expire int64) error {
 }
 
 // Get gets cached value by given key.
-func (c *MemoryCacher) Get(key string) string {
+func (c *MemoryCacher) Get(key string, _val interface{}) error {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
 	item, ok := c.items[key]
 	if !ok {
-		return ""
+		return errors.New("item not exist")
 	}
 	if item.expire > 0 &&
 		(time.Now().Unix()-item.created) >= item.expire {
 		go c.Delete(key)
-		return ""
+		return errors.New("item has expire")
 	}
-	return item.val
+
+	b, _ := item.val.([]byte)
+	return msgpack.Unmarshal(b, _val)
 }
 
 // Delete deletes cached value by given key.
@@ -110,9 +124,10 @@ func (c *MemoryCacher) Incr(key string) (int64, error) {
 	if !ok {
 		return 0, errors.New("key not exist")
 	}
-	i, err := strconv.ParseInt(item.val, 10, 32)
-	if err != nil {
-		return 0, err
+	i, okay := item.val.(int64)
+	//i, err := strconv.ParseInt(item.val, 10, 32)
+	if !okay {
+		return 0, errors.New("value is not int64")
 	}
 	item.val = strconv.FormatInt(i+1, 10)
 	return i + 1, nil
@@ -127,11 +142,12 @@ func (c *MemoryCacher) Decr(key string) (int64, error) {
 	if !ok {
 		return 0, errors.New("key not exist")
 	}
-
-	i, err := strconv.ParseInt(item.val, 10, 32)
-	if err != nil {
-		return 0, err
+	i, okay := item.val.(int64)
+	//i, err := strconv.ParseInt(item.val, 10, 32)
+	if !okay {
+		return 0, errors.New("value is not int64")
 	}
+
 	item.val = strconv.FormatInt(i-1, 10)
 	return i - 1, nil
 }
