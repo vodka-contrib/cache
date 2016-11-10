@@ -12,7 +12,7 @@ func Store(value interface{}) Cache {
 	switch v := value.(type) {
 	case vodka.Context:
 		if cacher, okay = v.Get(VodkaCacheStoreKey).(Cache); !okay {
-			panic("VodkaStore not found, forget to Use Middleware ?")
+			panic("Cacher not found, forget to Use Middleware ?")
 		}
 	default:
 
